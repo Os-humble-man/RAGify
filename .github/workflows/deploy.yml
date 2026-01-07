@@ -19,24 +19,26 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          timeout: 120s
+          command_timeout: 20m
+          script_stop: true
+          debug: true
           script: |
-            set -e
+            whoami
+            hostname
+            pwd
 
             cd ${{ secrets.APP_PATH }}
 
-            echo "📥 Pull latest code"
-            git pull origin main
+            git pull origin master
 
-            echo "📦 Install dependencies"
             bun install
 
-            echo "🎨 Build frontend"
             cd packages/client
             bun run build
             cd ../..
 
-            echo "🚀 Reload backend"
             pm2 reload ragify-api --update-env
 
             echo "✅ Deployment finished ✅ "
-
