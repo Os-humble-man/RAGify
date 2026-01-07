@@ -157,7 +157,7 @@ class ApiClient {
          };
       }
 
-      const { status, data, headers } = error.response;
+      const { status, data } = error.response;
       let message = 'An error occurred';
 
       if (typeof data === 'string') {

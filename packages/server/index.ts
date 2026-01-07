@@ -167,10 +167,6 @@ const generalLimiter = rateLimit({
    standardHeaders: true,
    legacyHeaders: false,
    skip: (req) => req.ip === '127.0.0.1', // Do not limit localhost
-   keyGenerator: (req) => {
-      // Use the real IP behind the proxy
-      return (req.headers['x-real-ip'] as string) || req.ip || 'unknown';
-   },
 });
 
 const authLimiter = rateLimit({

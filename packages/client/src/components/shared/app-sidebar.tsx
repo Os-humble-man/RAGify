@@ -65,8 +65,8 @@ import {
 } from '@/hooks/mutation/conversation.mutation';
 import {
    useCreateFolder,
-   useUpdateFolder,
-   useDeleteFolder,
+   // useUpdateFolder,
+   // useDeleteFolder,
 } from '@/hooks/mutation/folder.mutation';
 import { useFolders } from '@/hooks/queries/folder.queries';
 import { ConversationDropdownMenu } from './conversation-dropdown-menu';
@@ -170,8 +170,8 @@ export const AppSidebar = ({
       user?.id!
    );
    const createFolderMutation = useCreateFolder();
-   const updateFolderMutation = useUpdateFolder();
-   const deleteFolderMutation = useDeleteFolder();
+   // const updateFolderMutation = useUpdateFolder();
+   // const deleteFolderMutation = useDeleteFolder();
 
    const [templates, setTemplates] = useState([
       { id: '1', name: 'Code Review', uses: 12 },

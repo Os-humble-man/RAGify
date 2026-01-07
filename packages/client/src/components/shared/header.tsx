@@ -2,7 +2,7 @@ import {
    Asterisk,
    Bell,
    // Bell,
-   Globe,
+   // Globe,
    Moon,
    Settings,
    Sun,
@@ -40,7 +40,7 @@ const chatbots = [
 ];
 
 export default function Header({
-   currentView,
+   // currentView,
    isRagMode = false,
    onRagModeChange,
 }: HeaderProps) {
