@@ -31,7 +31,8 @@ jobs:
 
             cd ${{ secrets.APP_PATH }}
 
-            git pull origin master
+            git fetch origin
+            git reset --hard origin/master
 
             bun install
 
@@ -39,6 +40,7 @@ jobs:
             bun run build
             cd ../..
 
+            echo "🚀 Reload backend"
             pm2 reload ragify-api --update-env
 
             echo "✅ Deployment finished ✅ "
