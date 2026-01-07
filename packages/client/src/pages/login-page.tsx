@@ -6,7 +6,7 @@ const LoginPage = () => {
          <div className="w-full max-w-sm md:max-w-md">
             <div className="mb-8 flex flex-col items-center gap-2">
                <img src="/ragify.svg" alt="RAGify Logo" className="h-20 w-20" />
-               <h1 className="text-3xl font-bold tracking-tight">RAGify</h1>
+               <h1 className="text-4xl font-bold tracking-tight">RAGify</h1>
                <p className="text-muted-foreground text-sm">
                   Bienvenue sur votre assistant IA intelligent
                </p>
