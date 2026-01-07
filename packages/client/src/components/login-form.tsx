@@ -27,15 +27,10 @@ export function LoginForm({
       setLoginError(null);
 
       try {
-         const response = await login({ email, password });
-         console.log('Login successful, response:', response);
-         console.log('Store should now have user and token');
+         await login({ email, password });
 
-         // Wait a bit to ensure the store is updated and persisted
          await new Promise((resolve) => setTimeout(resolve, 200));
 
-         console.log('Redirecting to /');
-         // Redirect to home after successful login
          window.location.href = '/';
       } catch (err: any) {
          console.error('Login failed:', err);
@@ -96,7 +91,11 @@ export function LoginForm({
                         />
                      </Field>
                      <Field>
-                        <Button type="submit" disabled={isLoading}>
+                        <Button
+                           type="submit"
+                           variant={'destructive'}
+                           disabled={isLoading}
+                        >
                            {isLoading ? 'Logging in...' : 'Login'}
                         </Button>
                      </Field>
