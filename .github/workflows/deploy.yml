@@ -38,5 +38,5 @@ jobs:
             echo "🚀 Reload backend"
             pm2 reload ragify-api --update-env
 
-            echo "✅ Deployment finished"
+            echo "✅ Deployment finished ✅ "
 
