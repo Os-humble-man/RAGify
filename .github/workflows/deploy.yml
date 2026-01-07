@@ -34,10 +34,10 @@ jobs:
             git fetch origin
             git reset --hard origin/master
 
-            bun install
+            /home/mythe_deploy/.bun/bin/bun install
 
             cd packages/client
-            bun run build
+            /home/mythe_deploy/.bun/bin/bun run build
             cd ../..
 
             echo "🚀 Reload backend"
