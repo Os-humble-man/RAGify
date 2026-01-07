@@ -91,11 +91,7 @@ export function LoginForm({
                         />
                      </Field>
                      <Field>
-                        <Button
-                           type="submit"
-                           variant={'destructive'}
-                           disabled={isLoading}
-                        >
+                        <Button type="submit" disabled={isLoading}>
                            {isLoading ? 'Logging in...' : 'Login'}
                         </Button>
                      </Field>
