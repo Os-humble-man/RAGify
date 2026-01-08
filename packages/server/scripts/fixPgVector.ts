@@ -6,29 +6,37 @@ async function fixPgVector() {
    console.log('🔧 Starting pgvector fix...\n');
 
    try {
-      // Step 1: Enable pgvector extension
-      console.log('📦 Step 1: Enabling pgvector extension...');
-      await prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector;`);
-      console.log('✅ pgvector extension enabled\n');
-
-      // Step 2: Check if extension is active
-      console.log('🔍 Step 2: Verifying pgvector extension...');
+      // Step 1: Check if extension is active (skip creation if no superuser permissions)
+      console.log('🔍 Step 1: Verifying pgvector extension...');
       const extensions = await prisma.$queryRawUnsafe(`
          SELECT * FROM pg_extension WHERE extname = 'vector';
       `);
-      console.log('✅ Extension verified:', extensions);
+
+      if (!Array.isArray(extensions) || extensions.length === 0) {
+         console.log('⚠️  pgvector extension is not enabled!');
+         console.log('📝 Please run this command on your server:');
+         console.log(
+            '   sudo -u postgres psql -d your_database -c "CREATE EXTENSION IF NOT EXISTS vector;"'
+         );
+         console.log('');
+         throw new Error(
+            'pgvector extension not found. Please enable it manually with superuser permissions.'
+         );
+      }
+
+      console.log('✅ pgvector extension is active:', extensions);
       console.log('');
 
-      // Step 3: Drop existing table with CASCADE
-      console.log('🗑️  Step 3: Dropping existing docs_vectors table...');
+      // Step 2: Drop existing table with CASCADE
+      console.log('🗑️  Step 2: Dropping existing docs_vectors table...');
       await prisma.$executeRawUnsafe(
          `DROP TABLE IF EXISTS "docs_vectors" CASCADE;`
       );
       console.log('✅ Table dropped\n');
 
-      // Step 4: Recreate table with proper vector type
+      // Step 3: Recreate table with proper vector type
       console.log(
-         '🏗️  Step 4: Creating docs_vectors table with vector type...'
+         '🏗️  Step 3: Creating docs_vectors table with vector type...'
       );
       await prisma.$executeRawUnsafe(`
          CREATE TABLE "docs_vectors" (
@@ -45,8 +53,8 @@ async function fixPgVector() {
       `);
       console.log('✅ Table created with vector type\n');
 
-      // Step 5: Create indexes
-      console.log('📊 Step 5: Creating indexes...');
+      // Step 4: Create indexes
+      console.log('📊 Step 4: Creating indexes...');
 
       // Vector similarity index (using HNSW for better performance)
       await prisma.$executeRawUnsafe(`
@@ -68,8 +76,8 @@ async function fixPgVector() {
       `);
       console.log('✅ title index created\n');
 
-      // Step 6: Verify the setup
-      console.log('✅ Step 6: Verifying setup...');
+      // Step 5: Verify the setup
+      console.log('✅ Step 5: Verifying setup...');
       const tableInfo = await prisma.$queryRawUnsafe(`
          SELECT column_name, data_type 
          FROM information_schema.columns 
