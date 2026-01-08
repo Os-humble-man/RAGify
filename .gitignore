@@ -41,3 +41,4 @@ IMPLEMENTATION_GUIDE.md
 /packages/server/assets/documents/*
 /packages/server/assets/documents/*.pdf
 /packages/server/assets/documents/*.txt
+packages/client/.env.production
