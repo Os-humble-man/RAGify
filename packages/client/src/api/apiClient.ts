@@ -27,7 +27,7 @@ interface ErrorResponse {
 
 // Configuration
 const API_CONFIG = {
-   baseURL: (globalThis as any)?.process?.env?.NEXT_PUBLIC_API_URL || '/api',
+   baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api`,
    timeout: 30000,
    maxRetries: 3,
    retryDelay: 1000,
