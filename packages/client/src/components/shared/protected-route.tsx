@@ -25,7 +25,6 @@ export function ProtectedRoute({
       // Only redirect if we're sure there's no authentication
       // Don't redirect while loading
       if (!isLoading && !isAuthenticated && !user) {
-         console.log('Redirecting to login - no authentication found');
          window.location.href = redirectTo;
       }
    }, [isAuthenticated, isLoading, user, redirectTo]);

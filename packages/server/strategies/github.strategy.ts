@@ -27,7 +27,6 @@ passport.use(
             name: profile.displayName || profile.username || 'GitHub User',
             avatarUrl: profile.photos?.[0]?.value!,
          };
-         console.log(userProfile);
          done(null, userProfile);
       }
    )

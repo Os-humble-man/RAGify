@@ -34,16 +34,26 @@ export class ChatController extends BaseController {
          const { prompt, conversationId, senderId } = req.body;
          const actualUserId = senderId;
 
-         res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Cache-Control, Content-Type',
-            'Transfer-Encoding': 'chunked',
-         });
+         // Configuration des headers SSE
+         res.setHeader('Content-Type', 'text/event-stream');
+         res.setHeader('Cache-Control', 'no-cache, no-transform');
+         res.setHeader('Connection', 'keep-alive');
+         res.setHeader('X-Accel-Buffering', 'no'); // Pour nginx
+
+         // CORS headers
+         const origin = req.headers.origin;
+         if (origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+         }
+
+         // Empêcher le timeout de la connexion
+         req.socket.setTimeout(0);
+         req.socket.setNoDelay(true);
+         req.socket.setKeepAlive(true);
 
          res.write('event: connected\ndata: {"type":"connected"}\n\n');
+         res.flushHeaders(); // Envoyer les headers immédiatement
 
          const stream = this.chatService.sendMessageStream(
             prompt,
@@ -52,6 +62,18 @@ export class ChatController extends BaseController {
          );
 
          for await (const chunk of stream) {
+            // If this chunk contains conversationId, send it as a separate event
+            if (chunk.conversationId && !conversationId) {
+               const conversationIdData = {
+                  type: 'conversationId',
+                  conversationId: chunk.conversationId,
+               };
+               res.write(`data: ${JSON.stringify(conversationIdData)}\n\n`);
+               if (typeof (res as any).flush === 'function') {
+                  (res as any).flush();
+               }
+            }
+
             const eventData = {
                type: chunk.done ? 'done' : 'chunk',
                id: chunk.id,
@@ -218,16 +240,26 @@ export class ChatController extends BaseController {
          const { prompt, conversationId, senderId } = req.body;
          const actualUserId = senderId;
 
-         res.writeHead(200, {
-            'Content-Type': 'text/event-stream',
-            'Cache-Control': 'no-cache',
-            Connection: 'keep-alive',
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Headers': 'Cache-Control, Content-Type',
-            'Transfer-Encoding': 'chunked',
-         });
+         // Configuration des headers SSE
+         res.setHeader('Content-Type', 'text/event-stream');
+         res.setHeader('Cache-Control', 'no-cache, no-transform');
+         res.setHeader('Connection', 'keep-alive');
+         res.setHeader('X-Accel-Buffering', 'no'); // Pour nginx
+
+         // CORS headers
+         const origin = req.headers.origin;
+         if (origin) {
+            res.setHeader('Access-Control-Allow-Origin', origin);
+            res.setHeader('Access-Control-Allow-Credentials', 'true');
+         }
+
+         // Empêcher le timeout de la connexion
+         req.socket.setTimeout(0);
+         req.socket.setNoDelay(true);
+         req.socket.setKeepAlive(true);
 
          res.write('event: connected\ndata: {"type":"connected"}\n\n');
+         res.flushHeaders(); // Envoyer les headers immédiatement
 
          const stream = this.chatService.sendMessageStreamWithRAG(
             prompt,
@@ -236,6 +268,18 @@ export class ChatController extends BaseController {
          );
 
          for await (const chunk of stream) {
+            // If this chunk contains conversationId, send it as a separate event
+            if (chunk.conversationId && !conversationId) {
+               const conversationIdData = {
+                  type: 'conversationId',
+                  conversationId: chunk.conversationId,
+               };
+               res.write(`data: ${JSON.stringify(conversationIdData)}\n\n`);
+               if (typeof (res as any).flush === 'function') {
+                  (res as any).flush();
+               }
+            }
+
             const eventData = {
                type: chunk.done ? 'done' : 'chunk',
                id: chunk.id,

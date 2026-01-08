@@ -576,8 +576,6 @@ Titre:`;
             );
          }
 
-         console.log(`Conversation ${actualConversationId}: Stream completed`);
-
          yield {
             id: responseId,
             content: '',

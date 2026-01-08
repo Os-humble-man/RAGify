@@ -17,7 +17,6 @@ passport.use(
             avatarUrl: profile?.photos?.[0]?.value!,
          };
          done(null, userProfile);
-         console.log('++++++++++++++++++++User profile', profile);
       }
    )
 );

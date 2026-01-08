@@ -272,12 +272,11 @@ export const AppSidebar = ({
          uses: 0,
       };
       setTemplates([...templates, newTemplate]);
-      console.log('Created template:', newTemplate);
    };
 
    const handleSelectTemplate = (templateId: string) => {
       // TODO: Implement template selection and use it
-      console.log('Selected template:', templateId);
+      console.log('Selected template ID:', templateId);
    };
 
    return (

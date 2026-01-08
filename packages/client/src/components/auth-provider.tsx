@@ -10,11 +10,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
    const [hasChecked, setHasChecked] = useState(false);
 
    useEffect(() => {
-      console.log('AuthProvider - Initial user:', user);
-
       // If user is already in store (from localStorage), we're good
       if (user) {
-         console.log('User found in store');
          setHasChecked(true);
          return;
       }

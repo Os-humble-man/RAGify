@@ -103,17 +103,23 @@ export const ChatBox = () => {
          });
       } catch (error) {
          console.error('Error sending message:', error);
+
+         // Supprimer le message AI avec erreur et ajouter un message d'erreur clair
          setMessages((prev) =>
             prev.map((msg) =>
                msg.id === aiMessageId
                   ? {
                        ...msg,
                        content:
-                          "Sorry, I can't respond right now. Please try again later.",
+                          error instanceof Error
+                             ? `Erreur: ${error.message}`
+                             : 'Désolé, je ne peux pas répondre maintenant. Veuillez réessayer.',
                     }
                   : msg
             )
          );
+
+         // Ne pas afficher l'erreur à l'utilisateur si le message est déjà affiché
       }
    };
 
