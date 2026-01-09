@@ -59,17 +59,11 @@ export default function Header({
             <DropdownMenu>
                <DropdownMenuTrigger
                   asChild
-                  className="border-1 border-border/50 bg-popover/90 backdrop-blur-md rounded-md w-[100px] sm:w-[150px] px-2 sm:px-3 py-1 hover:bg-popover hover:shadow-md transition text-xs sm:text-sm"
+                  className="border-1 border-border/50 bg-popover/90 backdrop-blur-md rounded-md w-[150px] px-3 py-1 hover:bg-popover hover:shadow-md transition"
                >
-                  <Button
-                     variant="ghost"
-                     size="icon"
-                     className="w-full justify-between"
-                  >
-                     <span className="truncate">{selectedBot}</span>{' '}
-                     <span className="flex-shrink-0">
-                        {chatbots.find((bot) => bot.name === selectedBot)?.icon}
-                     </span>
+                  <Button variant="ghost" size="icon">
+                     {selectedBot}{' '}
+                     {chatbots.find((bot) => bot.name === selectedBot)?.icon}
                   </Button>
                </DropdownMenuTrigger>
                <DropdownMenuContent align="end">
@@ -83,11 +77,11 @@ export default function Header({
                   ))}
                </DropdownMenuContent>
             </DropdownMenu>
-            <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            <div className="ml-auto flex items-center gap-2">
                {/* RAG Mode Switch */}
                <Label
                   htmlFor="rag-mode"
-                  className="text-xs sm:text-sm font-medium cursor-pointer hidden sm:inline"
+                  className="text-sm font-medium cursor-pointer"
                >
                   RAG Mode
                </Label>
@@ -95,28 +89,23 @@ export default function Header({
                   id="rag-mode"
                   checked={isRagMode}
                   onCheckedChange={onRagModeChange}
-                  className="scale-75 sm:scale-100"
                />
 
                <Separator
                   orientation="vertical"
-                  className="mx-1 data-[orientation=vertical]:h-4 hidden sm:block"
+                  className="mx-1 data-[orientation=vertical]:h-4"
                />
 
-               <div className="flex items-center gap-1 sm:gap-2">
+               <div className="flex items-center gap-2">
                   <DropdownMenu>
                      <DropdownMenuTrigger asChild>
-                        <Button
-                           variant="ghost"
-                           size="icon"
-                           className="h-8 w-8 sm:h-10 sm:w-10"
-                        >
+                        <Button variant="ghost" size="icon">
                            {theme === 'light' ? (
-                              <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+                              <Sun className="w-5 h-5" />
                            ) : theme === 'dark' ? (
-                              <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+                              <Moon className="w-5 h-5" />
                            ) : (
-                              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+                              <Settings className="w-5 h-5" />
                            )}
                         </Button>
                      </DropdownMenuTrigger>
@@ -145,10 +134,9 @@ export default function Header({
                   <Button
                      variant="ghost"
                      size="icon"
-                     className="h-8 w-8 sm:h-10 sm:w-10 mr-1 sm:mr-0"
                      //   onClick={() => setOpenNotifications(true)}
                   >
-                     <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
+                     <Bell className="w-5 h-5" />
                   </Button>
 
                   {/* <Select
