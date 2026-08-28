@@ -1,186 +1,135 @@
 # RAGify
 
-RAGify is a full-stack RAG application for searching and chatting with internal documentation.
+RAGify is a full-stack RAG application for searching and chatting with internal documentation.Instead of manually browsing PDFs, procedures, policies, and internal files, users can ask questions in natural language and get answers grounded in their documents.When **RAG mode** is enabled, the application retrieves relevant content, builds context for the model, and returns a response with sources.
 
-Instead of manually browsing through PDFs, procedures, policies, or other internal files, users can ask questions in natural language. RAGify retrieves the most relevant document chunks, adds them to the model context, and generates an answer based on those sources.
+---
 
-The application also supports a regular AI chat mode when document retrieval is not needed.
+## Preview
 
-## Features
+The main interface is built around a simple chat experience. Users can switch between standard AI chat and RAG mode, browse previous conversations, organize chats into folders, and manage their account from the same workspace.
 
-- Chat with streamed responses using Server-Sent Events
-- RAG-based document search with PostgreSQL and pgvector
-- Standard chat and RAG chat modes
-- OpenAI and OpenRouter model support
-- PDF document processing and indexing
+![RAGify app preview](./docs/images/ragify-app-preview.png)
+
+---
+
+## Visual overview
+
+### RAGify at a glance
+
+At a high level, RAGify connects the web application to the backend RAG service, which coordinates the LLM provider, PostgreSQL/pgvector, and the internal document collection.The application stores conversation data and vector embeddings in PostgreSQL, while the RAG pipeline retrieves the most relevant document chunks before sending context to the selected model.
+
+![RAGify at a glance](./docs/images/ragify-at-a-glance.png)
+
+### How a RAG question is answered
+
+A RAG request goes through several stages before the final answer reaches the user.The question is first converted into an embedding. That embedding is used to search for semantically similar document chunks in `pgvector`. The retrieved content is then combined with the user question and model instructions before the request is sent to the LLM.
+
+The final response is streamed back to the interface together with references to the retrieved sources.
+
+![How a RAG question is answered](./docs/images/how-rag-works.png)
+
+### Project structure
+
+RAGify is organized as a small monorepo with a separate client and server.The client contains the chat experience, RAG mode controls, conversation history, and folder management. The server handles authentication, API routes, document indexing, database access, and the RAG pipeline.
+
+![Project structure](./docs/images/project-structure.png)
+
+### Typical user journey
+
+After signing in, a user can choose between standard chat and RAG mode.Standard chat works as a general AI assistant, while RAG mode uses indexed internal documents as additional context. Conversations can then be saved, organized into folders, or continued later.
+
+![Typical user journey](./docs/images/user-journey.png)
+
+---
+
+## What RAGify does
+
+RAGify helps teams interact with internal knowledge through a chat interface.
+Typical use cases include:
+- HR policies and internal procedures
+- IT documentation and troubleshooting guides
+- Operations workflows
+- Compliance documentation
+- Internal company knowledge bases
+
+Users can switch between:
+
+- **Standard chat** — general AI conversations
+- **RAG mode** — answers based on indexed internal documents
+
+---
+
+## Main capabilities
+
+- Streamed chat responses
+- Retrieval-Augmented Generation
+- Source-aware answers
+- Internal document indexing
 - Conversation history
-- Conversation folders and favorites
+- Folder organization
 - Email/password authentication
 - Google and GitHub OAuth
-- Token usage tracking
-- Swagger/OpenAPI documentation
-- Dark and light themes
-- Rate limiting and common API security middleware
+- OpenAI and OpenRouter support
+- Swagger API documentation
 
-## How RAG works
+---
 
-The RAG flow is intentionally kept separate from the regular chat flow.
+## Tech stack
+
+Only the main technologies are listed here. The repository contains the implementation details and supporting libraries.
+
+### Frontend
+- React
+- TypeScript
+### Backend
+- Bun
+- Express
+### Data and retrieval
+- PostgreSQL
+- pgvector
+- Prisma
+### AI providers
+- OpenAI
+- OpenRouter
+---
+
+## How it works
 
 When RAG mode is enabled:
 
 1. The user sends a question.
-2. The server generates an embedding for the question.
-3. PostgreSQL/pgvector searches for document chunks with similar embeddings.
-4. The retrieved chunks are added to the LLM context.
-5. The selected model generates the answer.
-6. The response is streamed back to the client through SSE.
+2. The server creates an embedding for the question.
+3. The application searches for relevant document chunks in `pgvector`.
+4. The retrieved chunks are added to the prompt context.
+5. The selected model generates an answer.
+6. The response is streamed back to the client with source references.
 
-A simplified version of the flow looks like this:
-
-```text
-User question
-     |
-     v
-Generate embedding
-     |
-     v
-pgvector similarity search
-     |
-     v
-Relevant document chunks
-     |
-     v
-Build LLM context
-     |
-     v
-OpenAI / OpenRouter
-     |
-     v
-Stream response to client
-```
-
-When RAG mode is disabled, the application skips the document retrieval step and behaves like a regular AI chat application.
-
-## Tech stack
-
-### Client
-
-- React 19
-- TypeScript
-- Vite
-- Tailwind CSS 4
-- Radix UI
-- TanStack Query
-- Zustand
-- Axios
-- Lucide React
-
-### Server
-
-- Bun
-- Express 5
-- TypeScript
-- PostgreSQL
-- pgvector
-- Prisma
-- InversifyJS
-- Zod
-- Passport.js
-- JWT
-- Winston
-- Swagger / OpenAPI
-
-### AI and document processing
-
-- OpenAI API
-- OpenRouter
-- `text-embedding-3-small`
-- pgvector similarity search
-- Tiktoken
-- PDF.js
-
-## Project structure
-
-RAGify uses a small monorepo containing the frontend and backend applications.
-
-```text
-RAGify/
-├── packages/
-│   ├── client/
-│   │   ├── src/
-│   │   │   ├── api/
-│   │   │   ├── components/
-│   │   │   ├── contexts/
-│   │   │   ├── hooks/
-│   │   │   ├── pages/
-│   │   │   ├── store/
-│   │   │   └── types/
-│   │   └── package.json
-│   │
-│   └── server/
-│       ├── assets/
-│       │   └── documents/
-│       ├── controllers/
-│       ├── services/
-│       ├── repositories/
-│       ├── routes/
-│       ├── middleware/
-│       ├── strategies/
-│       ├── utils/
-│       ├── prisma/
-│       │   ├── schema.prisma
-│       │   └── migrations/
-│       ├── scripts/
-│       ├── docs/
-│       └── package.json
-│
-├── .husky/
-├── index.ts
-├── package.json
-└── README.md
-```
-
-The backend follows a layered structure:
-
-```text
-routes
-  ↓
-controllers
-  ↓
-services
-  ↓
-repositories
-  ↓
-database
-```
-
-RAG-specific logic, document processing, embeddings, authentication, and other application concerns are handled through their respective services and utilities.
+---
 
 ## Getting started
 
 ### Requirements
 
 Before running the project locally, make sure you have:
-
 - Bun or Node.js 20+
 - PostgreSQL
-- pgvector installed in PostgreSQL
-- an OpenAI or OpenRouter API key
+- `pgvector` enabled in PostgreSQL
+- An OpenAI or OpenRouter API key
 
-## Installation
-
-Clone the repository:
+### Clone the repository
 
 ```bash
 git clone https://github.com/Os-humble-man/RAGify.git
 cd RAGify
 ```
 
-Install dependencies:
+### Install dependencies
 
 ```bash
 bun install
 ```
+
+### Configure the environment
 
 Create the server environment file:
 
@@ -189,50 +138,44 @@ cd packages/server
 cp .env.example .env
 ```
 
-Configure the required environment variables.
-
-At minimum, you will need a database connection, JWT secret, and an AI provider API key.
+The server environment can include the following configuration:
 
 ```env
-DATABASE_URL="postgresql://user:password@localhost:5432/ragify?schema=public"
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/ai_app?schema=public"
 
-JWT_SECRET="your-secret-key"
-
+# OpenAI / OpenRouter
 OPENAI_API_KEY="sk-..."
-
-# or
-
 OPENROUTER_API_KEY="sk-or-..."
 OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
-```
 
-Optional OAuth configuration:
+# JWT
+JWT_SECRET="your-secret-key"
 
-```env
+# OAuth (Google)
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 GOOGLE_CALLBACK_URL="http://localhost:3000/api/auth/google/callback"
 
+# OAuth (GitHub)
 GITHUB_CLIENT_ID="..."
 GITHUB_CLIENT_SECRET="..."
 GITHUB_CALLBACK_URL="http://localhost:3000/api/auth/github/callback"
-```
 
-Application configuration:
-
-```env
+# Server
 PORT=3000
 CLIENT_URL="http://localhost:5173"
-```
 
-Optional email configuration:
-
-```env
+# Email (optional)
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
 ```
+
+You do not need to configure every optional integration to start the application. For example, OAuth and SMTP can be configured only when those features are required.At minimum, the application needs a working database connection, a JWT secret, and credentials for at least one supported AI provider.
+
+---
 
 ## Database setup
 
@@ -248,31 +191,40 @@ Run the database migrations:
 bun run prisma:dev
 ```
 
-The PostgreSQL database must have the `pgvector` extension available for vector storage and similarity search.
+PostgreSQL must have the `pgvector` extension enabled because document embeddings are stored and queried as vectors.
 
-## Indexing documents
+---
 
-Documents used by the RAG pipeline are stored under:
+## Index documents
+
+Add internal documents to:
 
 ```text
 packages/server/assets/documents/
 ```
 
-After adding documents, run:
+Then run:
 
 ```bash
 bun run prepare-docs
 ```
 
-The indexing process extracts the document content, splits it into chunks, generates embeddings, and stores the chunks and vectors in PostgreSQL.
+The indexing process:
 
-You can test the RAG setup with:
+1. extracts document content
+2. splits the content into chunks
+3. generates embeddings
+4. stores chunks and vectors in PostgreSQL
+
+You can test the RAG pipeline with:
 
 ```bash
 bun run test-rag
 ```
 
-## Running the application
+---
+
+## Run the application
 
 From the repository root:
 
@@ -280,20 +232,22 @@ From the repository root:
 bun run dev
 ```
 
-This starts both applications:
+Default local endpoints:
 
-```text
-Client:  http://localhost:5173
-API:     http://localhost:3000
-Swagger: http://localhost:3000/api-docs
-```
+| Service | URL |
+| --- | --- |
+| Web app | `http://localhost:5173` |
+| API | `http://localhost:3000` |
+| Swagger | `http://localhost:3000/api-docs` |
 
-To inspect the database using Prisma Studio:
+To open Prisma Studio:
 
 ```bash
 cd packages/server
 bun run prisma:studio
 ```
+
+---
 
 ## Available scripts
 
@@ -328,59 +282,60 @@ bun run preview
 bun run lint
 ```
 
-## Chat modes
+---
 
-RAGify currently provides two chat modes.
-
-### Standard mode
-
-The selected LLM answers the conversation directly without retrieving internal documents.
-
-This mode is useful for general-purpose conversations.
-
-### RAG mode
-
-RAGify searches the indexed documentation before generating the response.
-
-For example:
+## Project structure
 
 ```text
-How do I request leave?
+RAGify/
+├── packages/
+│   ├── client/
+│   │   ├── src/
+│   │   │   ├── api/
+│   │   │   ├── components/
+│   │   │   ├── contexts/
+│   │   │   ├── hooks/
+│   │   │   ├── pages/
+│   │   │   ├── store/
+│   │   │   └── types/
+│   │   └── package.json
+│   │
+│   └── server/
+│       ├── assets/
+│       │   └── documents/
+│       ├── controllers/
+│       ├── services/
+│       ├── repositories/
+│       ├── routes/
+│       ├── middleware/
+│       ├── strategies/
+│       ├── utils/
+│       ├── prisma/
+│       │   ├── schema.prisma
+│       │   └── migrations/
+│       ├── scripts/
+│       ├── docs/
+│       └── package.json
+│
+├── docs/
+│   └── images/
+│       ├── ragify-app-preview.png
+│       ├── ragify-at-a-glance.png
+│       ├── how-rag-works.png
+│       ├── project-structure.png
+│       └── user-journey.png
+│
+├── .husky/
+├── index.ts
+├── package.json
+└── README.md
 ```
 
-or:
-
-```text
-What is the stock management procedure?
-```
-
-The retrieved document context is then passed to the model so that the response is based on the organization's documentation instead of only the model's general knowledge.
-
-## Authentication
-
-RAGify supports:
-
-- email and password
-- Google OAuth
-- GitHub OAuth
-
-Authentication uses Passport.js, JWT, and bcrypt.
-
-The server also includes Helmet, CORS configuration, and rate limiting.
-
-## API documentation
-
-The backend exposes Swagger documentation at:
-
-```text
-http://localhost:3000/api-docs
-```
-
-It can be used to inspect and test the available API endpoints during development.
+---
 
 ## Additional documentation
 
-More detailed notes about specific parts of the project are available in the repository:
+More detailed documentation is available in the repository:
 
 - `DOCUMENT_RAG_QUICKSTART.md`
 - `RAG_INTEGRATION_GUIDE.md`
@@ -390,19 +345,22 @@ More detailed notes about specific parts of the project are available in the rep
 - `FOLDER_FEATURES.md`
 - `FEATURES_ROADMAP.md`
 
+---
+
 ## Roadmap
 
-Some areas I would like to continue improving:
+Planned improvements include:
 
-- better source citations in RAG responses
-- document versioning
-- faster vector search and embedding caching
-- role-based document access
-- response feedback
-- conversation export and sharing
-- better analytics around queries and token usage
-- additional document integrations
-- broader automated test coverage
+- Better source citation UX
+- Document versioning
+- Faster retrieval and embedding caching
+- Role-based document access
+- Conversation export and sharing
+- Better analytics and observability
+- More document integrations
+- Broader automated test coverage
+
+---
 
 ## Author
 
@@ -410,9 +368,10 @@ Some areas I would like to continue improving:
 
 Web Developer
 
-GitHub: [@Os-humble-man](https://github.com/Os-humble-man)
+- GitHub: [@Os-humble-man](https://github.com/Os-humble-man)
+- Project: [RAGify](https://github.com/Os-humble-man/RAGify)
 
-Project: [RAGify](https://github.com/Os-humble-man/RAGify)
+---
 
 ## License
 
