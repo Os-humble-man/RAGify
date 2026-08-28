@@ -1,456 +1,419 @@
-# RAGify — Enterprise Documentation Chatbot
+# RAGify
 
-> **An intelligent RAG-based chatbot for internal documentation**  
-> Ask questions in natural language across your company’s knowledge base (Google Docs, Confluence, PDFs, Markdown).  
-> Get precise, **sourced answers** with deep links to relevant procedures, forms, or policies.
+RAGify is a full-stack RAG application for searching and chatting with internal documentation.
 
----
+Instead of manually browsing through PDFs, procedures, policies, or other internal files, users can ask questions in natural language. RAGify retrieves the most relevant document chunks, adds them to the model context, and generates an answer based on those sources.
 
-## 📋 Table of Contents
+The application also supports a regular AI chat mode when document retrieval is not needed.
 
-1. [Overview](#-overview)
-2. [Business Use Cases](#-business-use-cases)
-3. [Core Features (AI & RAG)](#-core-features-ai--rag)
-4. [Technologies Used](#-technologies-used)
-5. [Architecture](#-architecture)
-6. [Installation & Configuration](#-installation--configuration)
-7. [Usage](#-usage)
-8. [Available Scripts](#-available-scripts)
-9. [Project Structure](#-project-structure)
-10.   [Skills Demonstrated](#-skills-demonstrated)
-11.   [Roadmap & Future Improvements](#-roadmap--future-improvements)
-12.   [Author](#-author)
+## Features
 
----
+- Chat with streamed responses using Server-Sent Events
+- RAG-based document search with PostgreSQL and pgvector
+- Standard chat and RAG chat modes
+- OpenAI and OpenRouter model support
+- PDF document processing and indexing
+- Conversation history
+- Conversation folders and favorites
+- Email/password authentication
+- Google and GitHub OAuth
+- Token usage tracking
+- Swagger/OpenAPI documentation
+- Dark and light themes
+- Rate limiting and common API security middleware
 
-## 🎯 Overview
+## How RAG works
 
-**RAGify** is a full-stack Retrieval-Augmented Generation (RAG) application designed for enterprise use.  
-It allows employees to query internal documentation in natural language — returning **accurate, context-rich, and sourced answers**.
+The RAG flow is intentionally kept separate from the regular chat flow.
 
-### Example Workflow
+When RAG mode is enabled:
 
-> 🧑‍💼 _“How do I request leave?”_  
-> The chatbot retrieves the HR policy, cites the official document, and provides the link to the correct form.
+1. The user sends a question.
+2. The server generates an embedding for the question.
+3. PostgreSQL/pgvector searches for document chunks with similar embeddings.
+4. The retrieved chunks are added to the LLM context.
+5. The selected model generates the answer.
+6. The response is streamed back to the client through SSE.
 
----
+A simplified version of the flow looks like this:
 
-## 💼 Business Use Cases
-
-RAGify streamlines access to internal knowledge across departments:
-
-- 🧾 **HR** — Leave requests, onboarding, company policies
-- 💻 **IT** — Account setup, device policies, troubleshooting
-- ⚖️ **Compliance** — Regulations, audit procedures, GDPR documentation
-- 📈 **Operations** — Workflows, templates, forms, and SOPs
-
-RAGify ensures every employee gets **instant, reliable answers** without searching through folders or outdated docs.
-
----
-
-## ✨ Core Features (AI & RAG)
-
-| Category                       | Features                                                                                         |
-| ------------------------------ | ------------------------------------------------------------------------------------------------ |
-| 💬 **Chat Experience**         | Real-time streaming responses with Server-Sent Events (SSE)                                      |
-| 📚 **RAG Engine**              | Semantic search using pgvector + contextual prompt enrichment                                    |
-| 🔀 **Dual Mode**               | Toggle between standard AI chat and RAG-enhanced mode with document context                      |
-| 🔗 **Sourced Answers**         | RAG mode provides context from internal documents (HR, IT, Security, Stock procedures)           |
-| 🗂 **Conversation Management** | Create, organize, favorite, and move conversations into folders                                  |
-| 🔐 **Authentication**          | Email/password + OAuth 2.0 (Google & GitHub)                                                     |
-| ⚙️ **Configurable AI Stack**   | OpenAI and OpenRouter support with model selection                                               |
-| 🧩 **Document Indexing**       | PDF parsing and automatic embedding generation with chunk-based storage                          |
-| � **Analytics & Monitoring**   | Token usage tracking, conversation analytics, and system logging                                 |
-| 🎨 **Modern UI**               | Responsive design with dark/light mode, Tailwind CSS 4, and Radix UI components                  |
-| 📁 **Folder Organization**     | Organize conversations by topics or projects                                                     |
-| 🔒 **Security**                | Helmet, CORS, rate limiting, JWT tokens, bcrypt password hashing                                 |
-| 📄 **API Documentation**       | Complete Swagger/OpenAPI documentation                                                           |
-| 🎯 **Business Ready**          | User settings, templates, plugins architecture, notifications, exports, and sharing capabilities |
-
----
-
-## 🏢 Technologies Used
-
-### Frontend
-
-- **React 19**, **TypeScript**, **Vite**
-- **TailwindCSS 4**, **Radix UI** (Dialog, Avatar, Dropdown, Switch, Tooltip, Separator, Collapsible)
-- **Lucide React** for icons
-- **TanStack Query (React Query)** for state management
-- **Zustand** for global state
-- **Axios** for API communication
-
-### Backend
-
-- **Bun Runtime**, **Express 5**, **TypeScript**
-- **Prisma ORM + PostgreSQL + pgvector**
-- **InversifyJS** for dependency injection
-- **Passport.js** with OAuth 2.0 (Google & GitHub authentication)
-- **Zod** for schema validation
-- **JWT** for session management
-- **Winston** for logging
-- **Swagger** for API documentation
-- **Helmet**, **CORS**, **Rate Limiting** for security
-
-### RAG Engine
-
-- Embedding generation via **OpenAI API** (`text-embedding-3-small`)
-- Vector search with **pgvector** extension
-- **Tiktoken** for token counting
-- Automatic context injection in LLM prompts
-- Support for **OpenRouter** and **OpenAI** models
-- Document processing: **PDF.js** for PDF parsing
-
-### Dev Tools & Infrastructure
-
-- **Monorepo structure** with workspaces
-- **ESLint**, **Prettier** for code quality
-- **Husky**, **lint-staged** for pre-commit hooks
-- **Concurrently** for parallel dev server orchestration
-- **Nodemailer** for email notifications
-- **bcrypt** for password hashing
-
----
-
-## 🏗 Architecture
-
-### 🔄 Technical Workflow
-
-1. The user submits a question through the **React UI**.
-2. The **server (Express/Bun)** handles the query:
-   - Generates embeddings for the input.
-   - Performs a **semantic vector search** in `pgvector`.
-   - Constructs a **context-enriched prompt**.
-3. The AI model (OpenAI/OpenRouter) produces a **streamed response**.
-4. The frontend **displays the answer in real time**, including **citations and document links**.
-
-### 🧩 Structural Overview
-
+```text
+User question
+     |
+     v
+Generate embedding
+     |
+     v
+pgvector similarity search
+     |
+     v
+Relevant document chunks
+     |
+     v
+Build LLM context
+     |
+     v
+OpenAI / OpenRouter
+     |
+     v
+Stream response to client
 ```
+
+When RAG mode is disabled, the application skips the document retrieval step and behaves like a regular AI chat application.
+
+## Tech stack
+
+### Client
+
+- React 19
+- TypeScript
+- Vite
+- Tailwind CSS 4
+- Radix UI
+- TanStack Query
+- Zustand
+- Axios
+- Lucide React
+
+### Server
+
+- Bun
+- Express 5
+- TypeScript
+- PostgreSQL
+- pgvector
+- Prisma
+- InversifyJS
+- Zod
+- Passport.js
+- JWT
+- Winston
+- Swagger / OpenAPI
+
+### AI and document processing
+
+- OpenAI API
+- OpenRouter
+- `text-embedding-3-small`
+- pgvector similarity search
+- Tiktoken
+- PDF.js
+
+## Project structure
+
+RAGify uses a small monorepo containing the frontend and backend applications.
+
+```text
 RAGify/
 ├── packages/
-│   ├── client/                    # React + Vite frontend
+│   ├── client/
 │   │   ├── src/
-│   │   │   ├── api/              # API client layer
-│   │   │   ├── components/       # React components (UI + shared)
-│   │   │   ├── contexts/         # React contexts (RagMode, Auth)
-│   │   │   ├── hooks/            # Custom hooks (queries, mutations)
-│   │   │   ├── pages/            # Route pages
-│   │   │   ├── store/            # Zustand stores
-│   │   │   └── types/            # TypeScript types
+│   │   │   ├── api/
+│   │   │   ├── components/
+│   │   │   ├── contexts/
+│   │   │   ├── hooks/
+│   │   │   ├── pages/
+│   │   │   ├── store/
+│   │   │   └── types/
 │   │   └── package.json
 │   │
-│   └── server/                    # Express/Bun backend
+│   └── server/
 │       ├── assets/
-│       │   └── documents/        # Internal company docs (PDF, TXT)
-│       ├── controllers/          # Route controllers
-│       ├── services/             # Business logic (Chat, RAG, Auth, User)
-│       ├── repositories/         # Database access layer
-│       ├── routes/               # API routes
-│       ├── middleware/           # Express middleware
-│       ├── strategies/           # Passport OAuth strategies
-│       ├── utils/                # Helper utilities (JWT, Embedding, Tokens)
+│       │   └── documents/
+│       ├── controllers/
+│       ├── services/
+│       ├── repositories/
+│       ├── routes/
+│       ├── middleware/
+│       ├── strategies/
+│       ├── utils/
 │       ├── prisma/
-│       │   ├── schema.prisma     # Database schema
-│       │   └── migrations/       # Database migrations
-│       ├── scripts/              # Setup & RAG indexing scripts
-│       ├── docs/                 # Swagger API documentation
+│       │   ├── schema.prisma
+│       │   └── migrations/
+│       ├── scripts/
+│       ├── docs/
 │       └── package.json
 │
-├── index.ts                       # Root dev orchestrator (concurrently)
-├── package.json                   # Root workspace config
-├── .husky/                        # Git hooks
-├── DOCUMENT_RAG_QUICKSTART.md     # RAG setup guide
-├── RAG_INTEGRATION_GUIDE.md       # RAG implementation docs
-├── RAG_MODE_USAGE.md              # RAG mode usage guide
+├── .husky/
+├── index.ts
+├── package.json
 └── README.md
 ```
 
----
+The backend follows a layered structure:
 
-## ⚙️ Installation & Configuration
-
-### Prerequisites
-
-- **Node.js 20+** or **Bun**
-- **PostgreSQL** (with `pgvector` extension)
-- **OpenAI** or **OpenRouter API Key**
-
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/Os-humble-man/ai-app
-cd ai-app
-
-# Install dependencies (using Bun)
-bun install
-
-# Setup server environment
-cd packages/server
-cp .env.example .env
-# Edit .env and add:
-# - DATABASE_URL (PostgreSQL with pgvector)
-# - OPENAI_API_KEY or OPENROUTER_API_KEY
-# - JWT_SECRET
-# - OAuth credentials (GOOGLE_CLIENT_ID, GITHUB_CLIENT_ID, etc.)
-
-# Generate Prisma client
-bun run prisma:generate
-
-# Run database migrations
-bun run prisma:dev
-
-# (Optional) Prepare documents for RAG
-bun run prepare-docs
-
-# Go back to root
-cd ../..
-
-# Start both client and server in development mode
-bun run dev
+```text
+routes
+  ↓
+controllers
+  ↓
+services
+  ↓
+repositories
+  ↓
+database
 ```
 
-### Environment Variables
+RAG-specific logic, document processing, embeddings, authentication, and other application concerns are handled through their respective services and utilities.
 
-Create a `.env` file in `packages/server/` with the following:
+## Getting started
+
+### Requirements
+
+Before running the project locally, make sure you have:
+
+- Bun or Node.js 20+
+- PostgreSQL
+- pgvector installed in PostgreSQL
+- an OpenAI or OpenRouter API key
+
+## Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Os-humble-man/RAGify.git
+cd RAGify
+```
+
+Install dependencies:
+
+```bash
+bun install
+```
+
+Create the server environment file:
+
+```bash
+cd packages/server
+cp .env.example .env
+```
+
+Configure the required environment variables.
+
+At minimum, you will need a database connection, JWT secret, and an AI provider API key.
 
 ```env
-# Database
-DATABASE_URL="postgresql://user:password@localhost:5432/ai_app?schema=public"
+DATABASE_URL="postgresql://user:password@localhost:5432/ragify?schema=public"
 
-# OpenAI / OpenRouter
-OPENAI_API_KEY="sk-..."
-OPENROUTER_API_KEY="sk-or-..."
-OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
-
-# JWT
 JWT_SECRET="your-secret-key"
 
-# OAuth (Google)
+OPENAI_API_KEY="sk-..."
+
+# or
+
+OPENROUTER_API_KEY="sk-or-..."
+OPENROUTER_BASE_URL="https://openrouter.ai/api/v1"
+```
+
+Optional OAuth configuration:
+
+```env
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 GOOGLE_CALLBACK_URL="http://localhost:3000/api/auth/google/callback"
 
-# OAuth (GitHub)
 GITHUB_CLIENT_ID="..."
 GITHUB_CLIENT_SECRET="..."
 GITHUB_CALLBACK_URL="http://localhost:3000/api/auth/github/callback"
+```
 
-# Server
+Application configuration:
+
+```env
 PORT=3000
 CLIENT_URL="http://localhost:5173"
+```
 
-# Email (optional)
+Optional email configuration:
+
+```env
 SMTP_HOST="smtp.gmail.com"
 SMTP_PORT=587
 SMTP_USER="your-email@gmail.com"
 SMTP_PASS="your-app-password"
 ```
 
-For more details, see:
+## Database setup
 
-- **DOCUMENT_RAG_QUICKSTART.md** - Quick start guide for RAG setup
-- **RAG_INTEGRATION_GUIDE.md** - Complete RAG integration documentation
-- **RAG_MODE_USAGE.md** - Guide on using RAG mode
-- **DATABASE_SETUP.md** - Database configuration guide
-
-## 🚀 Usage
-
-### Starting the Application
+Generate the Prisma client:
 
 ```bash
-# Start both client (port 5173) and server (port 3000)
+bun run prisma:generate
+```
+
+Run the database migrations:
+
+```bash
+bun run prisma:dev
+```
+
+The PostgreSQL database must have the `pgvector` extension available for vector storage and similarity search.
+
+## Indexing documents
+
+Documents used by the RAG pipeline are stored under:
+
+```text
+packages/server/assets/documents/
+```
+
+After adding documents, run:
+
+```bash
+bun run prepare-docs
+```
+
+The indexing process extracts the document content, splits it into chunks, generates embeddings, and stores the chunks and vectors in PostgreSQL.
+
+You can test the RAG setup with:
+
+```bash
+bun run test-rag
+```
+
+## Running the application
+
+From the repository root:
+
+```bash
 bun run dev
 ```
 
-### Accessing the Application
+This starts both applications:
 
-1. **Frontend**: Visit http://localhost:5173
-2. **Backend API**: http://localhost:3000
-3. **API Documentation**: http://localhost:3000/api-docs (Swagger UI)
-4. **Prisma Studio**: `cd packages/server && bun run prisma:studio`
-
-### Using the Chat
-
-1. **Sign up** or **Log in** (Email/Password, Google, or GitHub)
-2. **Toggle RAG Mode** in the header to switch between:
-   - 💡 **Standard AI mode** → General-purpose chatbot responses
-   - 📘 **RAG mode** → Context-aware responses using internal documents
-3. **Ask questions** like:
-   - "Comment demander un congé?" (How do I request leave?)
-   - "Quelle est la procédure de gestion des stocks?" (What is the stock management procedure?)
-4. **Organize conversations** into folders
-5. **View conversation history** in the sidebar
-
-### Available Scripts
-
-#### Root Level
-
-```bash
-bun run dev        # Start both client and server
-bun run format     # Format code with Prettier
+```text
+Client:  http://localhost:5173
+API:     http://localhost:3000
+Swagger: http://localhost:3000/api-docs
 ```
 
-#### Server (`packages/server/`)
+To inspect the database using Prisma Studio:
 
 ```bash
-bun run dev                # Start server in watch mode
-bun run start              # Start server (production)
-bun run prisma:dev         # Run database migrations
-bun run prisma:studio      # Open Prisma Studio
-bun run prisma:generate    # Generate Prisma Client
-bun run prepare-docs       # Process and index documents for RAG
-bun run test-rag           # Test RAG functionality
-bun run fix-pgvector       # Fix pgvector extension issues
+cd packages/server
+bun run prisma:studio
 ```
 
-#### Client (`packages/client/`)
+## Available scripts
+
+### Root
 
 ```bash
-bun run dev        # Start Vite dev server
-bun run build      # Build for production
-bun run preview    # Preview production build
-bun run lint       # Run ESLint
+bun run dev
+bun run format
 ```
 
-## 📊 Project Structure
+### Server
 
-### Key Directories
+```bash
+bun run dev
+bun run start
 
-- **`/packages/client/`** — React 19 application with Vite
-   - `src/api/` — API client layer (Axios)
-   - `src/components/` — Reusable UI components
-   - `src/contexts/` — React Context providers (RagMode, Auth)
-   - `src/hooks/` — React Query hooks for data fetching
-   - `src/store/` — Zustand global state management
-- **`/packages/server/`** — Express/Bun backend API
-   - `controllers/` — Request handlers
-   - `services/` — Business logic (ChatService, RagService, AuthService)
-   - `repositories/` — Database access layer
-   - `routes/` — API route definitions
-   - `middleware/` — Error handling, validation, logging
-   - `strategies/` — Passport OAuth strategies
-   - `utils/` — Helper functions (JWT, Embeddings, Tokens)
-   - `prisma/` — Database schema and migrations
-   - `assets/documents/` — Internal company documents (PDF, TXT)
-   - `scripts/` — Document processing and RAG indexing utilities
+bun run prisma:dev
+bun run prisma:studio
+bun run prisma:generate
 
-- **Root configuration files**
-   - `index.ts` — Concurrently orchestrator for dev mode
-   - `package.json` — Monorepo workspace configuration
-   - `.husky/` — Git hooks for code quality
+bun run prepare-docs
+bun run test-rag
+bun run fix-pgvector
+```
 
-## 🎓 Skills Demonstrated
+### Client
 
-| Area                             | Capabilities                                                                         |
-| -------------------------------- | ------------------------------------------------------------------------------------ |
-| 🧠 **RAG & AI Integration**      | Semantic search, embeddings (OpenAI), pgvector, context injection, dual-mode chatbot |
-| 🌐 **Full-Stack Architecture**   | React 19 + Express 5 monorepo with Bun runtime, TypeScript throughout                |
-| 🧩 **Backend Engineering**       | RESTful API design, Prisma ORM, PostgreSQL, InversifyJS DI, layered architecture     |
-| 🔐 **Authentication & Security** | JWT, OAuth 2.0 (Passport.js), bcrypt, Helmet, CORS, rate limiting                    |
-| 🚀 **Performance**               | Real-time SSE streaming, React Query for caching, async/await optimization           |
-| 🧰 **DevOps & Code Quality**     | Husky, lint-staged, ESLint, Prettier, Git hooks, workspace management                |
-| 🎨 **Professional UX/UI**        | Tailwind CSS 4, Radix UI primitives, responsive design, dark mode support            |
-| � **Data Management**            | Vector databases, document chunking, embedding generation, token counting            |
-| 🧾 **Documentation**             | Swagger/OpenAPI, comprehensive guides, inline documentation                          |
-| 🏗️ **Design Patterns**           | Repository pattern, service layer, dependency injection, context providers           |
+```bash
+bun run dev
+bun run build
+bun run preview
+bun run lint
+```
 
-## 🧭 Roadmap & Future Improvements
+## Chat modes
 
-### In Progress
+RAGify currently provides two chat modes.
 
-- ✅ RAG mode with document context
-- ✅ OAuth authentication (Google & GitHub)
-- ✅ Folder organization system
-- ✅ Real-time streaming responses
-- ✅ Swagger API documentation
+### Standard mode
 
-### Planned Features
+The selected LLM answers the conversation directly without retrieving internal documents.
 
-- 📑 **Source Citations** - Display document sources with download links in RAG responses
-- 📊 **Enhanced Analytics** - Dashboard for token usage, conversation metrics, popular queries
-- 🔍 **Document Versioning** - Track document updates and maintain version history
-- ⚙️ **Performance Optimization** - Embedding cache & HNSW index for faster vector search
-- 🌍 **Multi-language Support** - i18n integration for international teams
-- 🔒 **RBAC** - Role-based access control for document permissions
-- 💬 **Feedback System** - User ratings for AI responses to improve quality
-- 📤 **Export & Share** - Export conversations to PDF/Markdown, share with team members
-- 🔔 **Real-time Notifications** - WebSocket integration for live updates
-- 🎨 **Custom Themes** - Brand customization and white-labeling
-- 🔌 **Plugin System** - Extensible architecture for custom integrations
-- 📱 **Mobile Optimization** - Progressive Web App (PWA) capabilities
-- 🧪 **Testing Suite** - Comprehensive unit and integration tests
+This mode is useful for general-purpose conversations.
 
-## 👤 Author
+### RAG mode
 
-**Oscar Kanangila**  
-🚀 Web Developer
+RAGify searches the indexed documentation before generating the response.
 
-**Expertise:**
+For example:
 
-- 🧠 Retrieval-Augmented Generation (RAG) & LLM Integration
-- ⚛️ React, TypeScript, Modern Frontend Architecture
-- 🔧 Node.js, Express, Bun Runtime
-- 🗄️ PostgreSQL, Prisma ORM, Vector Databases
-- 🔐 OAuth, JWT, Enterprise Security
-- 🏗️ Monorepo Architecture, Dependency Injection
-- 📊 API Design, Swagger Documentation
+```text
+How do I request leave?
+```
 
-**Connect:**
+or:
 
-- GitHub: [@Os-humble-man](https://github.com/Os-humble-man)
-- Project: [RAGify](https://github.com/Os-humble-man/RAGify)
+```text
+What is the stock management procedure?
+```
 
----
+The retrieved document context is then passed to the model so that the response is based on the organization's documentation instead of only the model's general knowledge.
 
-## 📚 Additional Documentation
+## Authentication
 
-This project includes comprehensive documentation:
+RAGify supports:
 
-- **[DOCUMENT_RAG_QUICKSTART.md](./DOCUMENT_RAG_QUICKSTART.md)** - Quick start guide for RAG implementation
-- **[RAG_INTEGRATION_GUIDE.md](./RAG_INTEGRATION_GUIDE.md)** - Detailed RAG integration documentation
-- **[RAG_MODE_USAGE.md](./RAG_MODE_USAGE.md)** - How to use and implement RAG mode
-- **[DATABASE_SETUP.md](./DATABASE_SETUP.md)** - Database configuration and migrations
-- **[CONVERSATION_FILTERING.md](./CONVERSATION_FILTERING.md)** - Conversation management features
-- **[FOLDER_FEATURES.md](./FOLDER_FEATURES.md)** - Folder organization system
-- **[FEATURES_ROADMAP.md](./FEATURES_ROADMAP.md)** - Detailed feature roadmap
+- email and password
+- Google OAuth
+- GitHub OAuth
 
----
+Authentication uses Passport.js, JWT, and bcrypt.
 
-## ⭐️ Contribute
+The server also includes Helmet, CORS configuration, and rate limiting.
 
-Contributions, feedback, and ideas are welcome!
+## API documentation
 
-### How to Contribute
+The backend exposes Swagger documentation at:
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+```text
+http://localhost:3000/api-docs
+```
 
-### Development Guidelines
+It can be used to inspect and test the available API endpoints during development.
 
-- Follow the existing code style (ESLint + Prettier)
-- Write meaningful commit messages
-- Update documentation when adding features
-- Test your changes before submitting
+## Additional documentation
 
----
+More detailed notes about specific parts of the project are available in the repository:
 
-## 🧩 License
+- `DOCUMENT_RAG_QUICKSTART.md`
+- `RAG_INTEGRATION_GUIDE.md`
+- `RAG_MODE_USAGE.md`
+- `DATABASE_SETUP.md`
+- `CONVERSATION_FILTERING.md`
+- `FOLDER_FEATURES.md`
+- `FEATURES_ROADMAP.md`
 
-This project is distributed under the **MIT License**.
+## Roadmap
 
----
+Some areas I would like to continue improving:
 
-## 🙏 Acknowledgments
+- better source citations in RAG responses
+- document versioning
+- faster vector search and embedding caching
+- role-based document access
+- response feedback
+- conversation export and sharing
+- better analytics around queries and token usage
+- additional document integrations
+- broader automated test coverage
 
-- **OpenAI** for GPT models and embeddings API
-- **OpenRouter** for multi-model LLM routing
-- **Prisma** for excellent ORM tooling
-- **Radix UI** for accessible component primitives
-- **SHADCN UI** for accessible component primitives
-- **TailwindCSS** for utility-first styling
-- **Bun** for blazing fast JavaScript runtime
+## Author
+
+**Oscar Kanangila**
+
+Web Developer
+
+GitHub: [@Os-humble-man](https://github.com/Os-humble-man)
+
+Project: [RAGify](https://github.com/Os-humble-man/RAGify)
+
+## License
+
+MIT
